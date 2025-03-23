@@ -1,0 +1,198 @@
+using System;
+
+public class SquareMatrix
+{
+    private int[,] matrix;
+    private int size;
+
+    public int Size => size;
+
+    public SquareMatrix(int size)
+    {
+        this.size = size;
+        matrix = new int[size, size];
+        Random rand = new Random();
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                matrix[i, j] = rand.Next(1, 10);
+            }
+        }
+    }
+
+    public SquareMatrix(int[,] matrix)
+    {
+        if (matrix.GetLength(0) != matrix.GetLength(1))
+            throw new ArgumentException("Матрица должна быть квадратной.");
+        this.size = matrix.GetLength(0);
+        this.matrix = matrix;
+    }
+
+    public int this[int i, int j]
+    {
+        get => matrix[i, j];
+        set => matrix[i, j] = value;
+    }
+
+    public override string ToString()
+    {
+        string result = "";
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                result += matrix[i, j] + " ";
+            }
+            result += "\n";
+        }
+        return result;
+    }
+}
+
+public static class MatrixExtensions
+{
+    public static SquareMatrix Transpose(this SquareMatrix matrix)
+    {
+        int size = matrix.Size;
+        int[,] transposed = new int[size, size];
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                transposed[j, i] = matrix[i, j];
+            }
+        }
+        return new SquareMatrix(transposed);
+    }
+
+    public static int Trace(this SquareMatrix matrix)
+    {
+        int trace = 0;
+        for (int i = 0; i < matrix.Size; i++)
+        {
+            trace += matrix[i, i];
+        }
+        return trace;
+    }
+}
+
+public static class MatrixOperations
+{
+    public static DiagonalizeDelegate Diagonalize = delegate (SquareMatrix matrix)
+    {
+        int size = matrix.Size;
+        int[,] diagonal = new int[size, size];
+        for (int i = 0; i < size; i++)
+        {
+            diagonal[i, i] = matrix[i, i];
+        }
+        return new SquareMatrix(diagonal);
+    };
+}
+
+public delegate SquareMatrix DiagonalizeDelegate(SquareMatrix matrix);
+
+public abstract class MatrixHandler
+{
+    protected MatrixHandler nextHandler;
+
+    public void SetNextHandler(MatrixHandler handler)
+    {
+        nextHandler = handler;
+    }
+
+    public abstract void HandleRequest(SquareMatrix matrix, string operation);
+}
+
+public class TransposeHandler : MatrixHandler
+{
+    public override void HandleRequest(SquareMatrix matrix, string operation)
+    {
+        if (operation == "transpose")
+        {
+            Console.WriteLine("Транспонированная матрица:");
+            Console.WriteLine(matrix.Transpose());
+        }
+        else if (nextHandler != null)
+        {
+            nextHandler.HandleRequest(matrix, operation);
+        }
+    }
+}
+
+public class TraceHandler : MatrixHandler
+{
+    public override void HandleRequest(SquareMatrix matrix, string operation)
+    {
+        if (operation == "trace")
+        {
+            Console.WriteLine("След матрицы: " + matrix.Trace());
+        }
+        else if (nextHandler != null)
+        {
+            nextHandler.HandleRequest(matrix, operation);
+        }
+    }
+}
+
+public class DiagonalizeHandler : MatrixHandler
+{
+    public override void HandleRequest(SquareMatrix matrix, string operation)
+    {
+        if (operation == "diagonalize")
+        {
+            Console.WriteLine("Диагонализированная матрица:");
+            Console.WriteLine(MatrixOperations.Diagonalize(matrix));
+        }
+        else if (nextHandler != null)
+        {
+            nextHandler.HandleRequest(matrix, operation);
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        SquareMatrix matrix = new SquareMatrix(3);
+        Console.WriteLine("Исходная матрица:");
+        Console.WriteLine(matrix);
+
+        MatrixHandler transposeHandler = new TransposeHandler();
+        MatrixHandler traceHandler = new TraceHandler();
+        MatrixHandler diagonalizeHandler = new DiagonalizeHandler();
+
+        transposeHandler.SetNextHandler(traceHandler);
+        traceHandler.SetNextHandler(diagonalizeHandler);
+
+        while (true)
+        {
+            Console.WriteLine("\nВыберите операцию:");
+            Console.WriteLine("1. Транспонировать матрицу");
+            Console.WriteLine("2. Найти след матрицы");
+            Console.WriteLine("3. Привести матрицу к диагональному виду");
+            Console.WriteLine("4. Выйти");
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    transposeHandler.HandleRequest(matrix, "transpose");
+                    break;
+                case "2":
+                    traceHandler.HandleRequest(matrix, "trace");
+                    break;
+                case "3":
+                    diagonalizeHandler.HandleRequest(matrix, "diagonalize");
+                    break;
+                case "4":
+                    return;
+                default:
+                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                    break;
+            }
+        }
+    }
+}
