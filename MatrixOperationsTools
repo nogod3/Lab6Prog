@@ -9,44 +9,56 @@ public class SquareMatrix
 
     public SquareMatrix(int size)
     {
-        this.size = size;
-        matrix = new int[size, size];
-        Random rand = new Random();
-        for (int i = 0; i < size; i++)
+        _size = size;
+        _matrix = new int[size, size];
+        Random random = new Random();
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) // изменил i на rowIndex
         {
-            for (int j = 0; j < size; j++)
+            for (int columnIndex = 0; columnIndex < size; columnIndex++) // изменил j на columnIndex
             {
-                matrix[i, j] = rand.Next(1, 10);
+                _matrix[rowIndex, columnIndex] = random.Next(1, 10);
             }
         }
     }
 
     public SquareMatrix(int[,] matrix)
     {
-        if (matrix.GetLength(0) != matrix.GetLength(1))
-            throw new ArgumentException("Матрица должна быть квадратной.");
-        this.size = matrix.GetLength(0);
-        this.matrix = matrix;
+    int rows = matrix.GetDimension(0); // изменил GetLength на GetDimension
+    int columns = matrix.GetDimension(1); // изменил GetLength на GetDimension
+
+    if (rows != columns)
+        throw new ArgumentException("Матрица должна быть квадратной."); // добавил проверку на квадратность
+    _size = rows;
+    _matrix = matrix;
     }
 
-    public int this[int i, int j]
+    public int this[int rowIndex, int columnIndex] 
     {
-        get => matrix[i, j];
-        set => matrix[i, j] = value;
+    get => _matrix[rowIndex, columnIndex];
+    set => _matrix[rowIndex, columnIndex] = value;
     }
 
     public override string ToString()
     {
         string result = "";
-        for (int i = 0; i < size; i++)
+        for (int rowIndex = 0; rowIndex < _size; rowIndex++) 
         {
-            for (int j = 0; j < size; j++)
+            for (int columnIndex = 0; columnIndex < _size; columnIndex++) 
             {
-                result += matrix[i, j] + " ";
+                result += _matrix[rowIndex, columnIndex] + " ";
             }
             result += "\n";
         }
         return result;
+    }
+}
+
+// добавил метод для получения размерности
+public static class ArrayExtensions
+{
+    public static int GetDimension(this int[,] array, int dimension)
+    {
+        return array.GetLength(dimension);  
     }
 }
 
@@ -56,22 +68,22 @@ public static class MatrixExtensions
     {
         int size = matrix.Size;
         int[,] transposed = new int[size, size];
-        for (int i = 0; i < size; i++)
+        for (int rowIndex = 0; rowIndex < size; rowIndex++) 
         {
-            for (int j = 0; j < size; j++)
+            for (int columnIndex = 0; columnIndex < size; columnIndex++) 
             {
-                transposed[j, i] = matrix[i, j];
+                transposed[columnIndex, rowIndex] = matrix[rowIndex, columnIndex]; 
             }
         }
         return new SquareMatrix(transposed);
     }
 
-    public static int Trace(this SquareMatrix matrix)
+        public static int Trace(this SquareMatrix matrix)
     {
         int trace = 0;
         for (int i = 0; i < matrix.Size; i++)
         {
-            trace += matrix[i, i];
+            trace += matrix[i, i];  
         }
         return trace;
     }
